@@ -8,19 +8,23 @@ module RSpec::Puppet
     @@cache = RSpec::Puppet::Cache.new
 
     def subject
-      if self.respond_to?(:facts) && facts['operatingsystem'] && facts['operatingsystem'].to_s.downcase == 'windows'
+      lambda { catalogue }
+    end
+
+    def environment
+      'rp_env'
+    end
+
+    def stub_file_consts(example)
+      munged_facts = facts_hash(nodename(example.metadata[:type]))
+
+      if munged_facts['operatingsystem'] && munged_facts['operatingsystem'].to_s.downcase == 'windows'
         stub_const('File::PATH_SEPARATOR', ';')
         stub_const('File::ALT_SEPARATOR', "\\")
       else
         stub_const('File::PATH_SEPARATOR', ':')
         stub_const('File::ALT_SEPARATOR', nil)
       end
-
-      lambda { catalogue }
-    end
-
-    def environment
-      'rp_env'
     end
 
     def load_catalogue(type, exported = false, manifest_opts = {})
