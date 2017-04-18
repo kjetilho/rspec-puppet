@@ -17,16 +17,16 @@ describe RSpec::Puppet::Adapters::Base do
       it "sets the Puppet setting based on the example group setting" do
         context = double :confdir => "/etc/fingerpuppet"
         subject.set_setting(context, :confdir, :confdir)
-        expect(Puppet[:confdir]).to eq "/etc/fingerpuppet"
+        expect(Puppet[:confdir]).to eq("/etc/fingerpuppet").or eq("C:/etc/fingerpuppet")
       end
 
       it "does not persist settings between example groups" do
         context1 = double :confdir => "/etc/fingerpuppet"
         context2 = double
         subject.set_setting(context1, :confdir, :confdir)
-        expect(Puppet[:confdir]).to eq "/etc/fingerpuppet"
+        expect(Puppet[:confdir]).to eq("/etc/fingerpuppet").or eq("C:/etc/fingerpuppet")
         subject.set_setting(context2, :confdir, :confdir)
-        expect(Puppet[:confdir]).to eq "/etc/puppet"
+        expect(Puppet[:confdir]).to eq("/etc/puppet").or eq("C:/etc/puppet")
       end
     end
 
@@ -37,7 +37,7 @@ describe RSpec::Puppet::Adapters::Base do
 
       it "sets the Puppet setting based on the global configuration value" do
         subject.set_setting(double, :confdir, :confdir)
-        expect(Puppet[:confdir]).to eq "/etc/bunraku"
+        expect(Puppet[:confdir]).to eq("/etc/bunraku").or eq("C:/etc/bunraku")
       end
     end
 
@@ -49,7 +49,7 @@ describe RSpec::Puppet::Adapters::Base do
       it "prefers the context specific setting" do
         context = double :confdir => "/etc/sockpuppet"
         subject.set_setting(context, :confdir, :confdir)
-        expect(Puppet[:confdir]).to eq "/etc/sockpuppet"
+        expect(Puppet[:confdir]).to eq("/etc/sockpuppet").or eq("C:/etc/bunraku")
       end
     end
 
