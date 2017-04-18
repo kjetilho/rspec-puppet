@@ -276,9 +276,9 @@ module RSpec::Puppet
 
     def stub_facts!(facts)
       if facts['operatingsystem'] && facts['operatingsystem'].to_s.downcase == 'windows'
-        Puppet::Util::Platform.pretend_windows
+        Puppet::Util::Platform.pretend_to_be :windows
       else
-        Puppet::Util::Platform.unpretend_windows
+        Puppet::Util::Platform.pretend_to_be :linux
       end
       Puppet.settings[:autosign] = false
       facts.each { |k, v| Facter.add(k) { setcode { v } } }
