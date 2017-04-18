@@ -52,6 +52,44 @@ module Puppet
     end
   end
 
+  module Parser::Files
+    if method_defined?(:find_in_module)
+      old_find_in_module = method(:find_in_module)
+
+      def find_in_module(*args)
+        pretending = Puppet::Util::Platform.pretend_platform
+
+        if pretending
+          Puppet::Util::Platform.pretend_to_be nil
+        end
+
+        output = old_find_in_module.bind(self).call(*args)
+
+        Puppet::Util::Platform.pretend_to_be pretending
+
+        output
+      end
+      module_function :find_in_module
+    end
+
+    if method_defined?(:split_file_path)
+      old_split_file_path = method(:split_file_path)
+
+      def split_file_path(*args)
+        pretending = Puppet::Util::Platform.pretend_platform
+
+        if pretending
+          Puppet::Util::Platform.pretend_to_be nil
+        end
+
+        output = old_split_file_path.bind(self).call(*args)
+
+        Puppet::Util::Platform.pretend_to_be pretending
+      end
+      module_function :split_file_path
+    end
+  end
+
   module Util
     # Allow rspec-puppet to pretend to be windows.
     module Platform
