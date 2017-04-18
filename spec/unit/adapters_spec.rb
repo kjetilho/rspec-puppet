@@ -49,7 +49,7 @@ describe RSpec::Puppet::Adapters::Base do
       it "prefers the context specific setting" do
         context = double :confdir => "/etc/sockpuppet"
         subject.set_setting(context, :confdir, :confdir)
-        expect(Puppet[:confdir]).to eq("/etc/sockpuppet").or eq("C:/etc/bunraku")
+        expect(Puppet[:confdir]).to eq("/etc/sockpuppet").or eq("C:/etc/sockpuppet")
       end
     end
 
@@ -147,7 +147,7 @@ describe RSpec::Puppet::Adapters::Adapter4X, :if => Puppet.version.to_f >= 4.0 d
     it 'returns the configured environment manifest when set' do
       allow(RSpec.configuration).to receive(:manifest).and_return("/path/to/manifest")
       subject.setup_puppet(double(:environment => 'rp_puppet'))
-      expect(subject.manifest).to eq "/path/to/manifest"
+      expect(subject.manifest).to eq("/path/to/manifest").or eq("C:/path/to/manifest")
     end
 
     it 'returns nil when the configured environment manifest is not set' do
