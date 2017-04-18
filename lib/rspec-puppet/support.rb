@@ -28,7 +28,7 @@ module RSpec::Puppet
     end
 
     def stub_const_wrapper(const, value)
-      if RSpec.configuration.mock_framework == RSpec::Core::MockingAdapters::RSpec
+      if defined?(RSpec::Core::MockingAdapters::RSpec) && RSpec.configuration.mock_framework == RSpec::Core::MockingAdapters::RSpec
         stub_const("File::#{const}", value)
       else
         File.send(:remove_const, const) if File.const_defined?(const)
