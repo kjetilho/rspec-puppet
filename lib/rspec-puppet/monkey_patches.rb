@@ -1,3 +1,5 @@
+require 'rubygems'
+
 module Puppet
   # Allow rspec-puppet to prevent Puppet::Type from automatically picking
   # a provider for a resource. We need to do this because in order to fully
@@ -30,17 +32,9 @@ module Puppet
     old_try_load_fqname = instance_method(:try_load_fqname)
 
     define_method(:try_load_fqname) do |type, fqname|
-      pretending = Puppet::Util::Platform.pretend_platform
-
-      if pretending
-        Puppet::Util::Platform.pretend_to_be nil
+      Puppet::Util::Platform.without_pretending do
+        old_try_load_fqname.bind(self).call(type, fqname)
       end
-
-      output = old_try_load_fqname.bind(self).call(type, fqname)
-
-      Puppet::Util::Platform.pretend_to_be pretending
-
-      output
     end
   end
 
@@ -55,17 +49,9 @@ module Puppet
       old_validate_dirs = instance_method(:validate_dirs)
 
       define_method(:validate_dirs) do |dirs|
-        pretending = Puppet::Util::Platform.pretend_platform
-
-        if pretending
-          Puppet::Util::Platform.pretend_to_be nil
+        Puppet::Util::Platform.without_pretending do
+          old_validate_dirs.bind(self).call(dirs)
         end
-
-        output = old_validate_dirs.bind(self).call(dirs)
-
-        Puppet::Util::Platform.pretend_to_be pretending
-
-        output
       end
     end
   end
@@ -75,17 +61,9 @@ module Puppet
       old_find_in_module = method(:find_in_module)
 
       def find_in_module(*args)
-        pretending = Puppet::Util::Platform.pretend_platform
-
-        if pretending
-          Puppet::Util::Platform.pretend_to_be nil
+        Puppet::Util::Platform.without_pretending do
+          old_find_in_module.bind(self).call(*args)
         end
-
-        output = old_find_in_module.bind(self).call(*args)
-
-        Puppet::Util::Platform.pretend_to_be pretending
-
-        output
       end
       module_function :find_in_module
     end
@@ -94,15 +72,9 @@ module Puppet
       old_split_file_path = method(:split_file_path)
 
       def split_file_path(*args)
-        pretending = Puppet::Util::Platform.pretend_platform
-
-        if pretending
-          Puppet::Util::Platform.pretend_to_be nil
+        Puppet::Util::Platform.without_pretending do
+          old_split_file_path.bind(self).call(*args)
         end
-
-        output = old_split_file_path.bind(self).call(*args)
-
-        Puppet::Util::Platform.pretend_to_be pretending
       end
       module_function :split_file_path
     end
@@ -123,6 +95,7 @@ module Puppet
 
       def pretend_to_be(platform)
         @pretend_platform = platform
+        stub_consts_for(platform)
       end
       module_function :pretend_to_be
 
@@ -130,6 +103,45 @@ module Puppet
         @pretend_platform ||= nil
       end
       module_function :pretend_platform
+
+      def real_platform
+        Gem.win_platform? ? :windows : :nix
+      end
+      module_function :real_platform
+
+      def without_pretending
+        pretending_to_be = pretend_platform
+
+        if pretending_to_be
+          pretend_to_be nil
+        end
+
+        stub_consts_for(real_platform)
+
+        output = yield
+
+        pretend_to_be(pretending_to_be)
+
+        output
+      end
+      module_function :without_pretending
+
+      def stub_consts_for(platform)
+        if platform == :windows
+          stub_const('PATH_SEPARATOR', ';')
+          stub_const('ALT_SEPARATOR', "\\")
+        else
+          stub_const('PATH_SEPARATOR', ':')
+          stub_const('ALT_SEPARATOR', nil)
+        end
+      end
+      module_function :stub_consts_for
+
+      def stub_const(const, value)
+        File.send(:remove_const, const) if File.const_defined?(const)
+        File.const_set(const, value)
+      end
+      module_function :stub_const
     end
   end
 end
