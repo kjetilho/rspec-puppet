@@ -26,6 +26,24 @@ module Puppet
     end
   end
 
+  class Parser::TypeLoader
+    old_try_load_fqname = instance_method(:try_load_fqname)
+
+    define_method(:try_load_fqname) do |type, fqname|
+      pretending = Puppet::Util::Platform.pretend_platform
+
+      if pretending
+        Puppet::Util::Platform.pretend_to_be nil
+      end
+
+      output = old_try_load_fqname.bind(self).call(type, fqname)
+
+      Puppet::Util::Platform.pretend_to_be pretending
+
+      output
+    end
+  end
+
   # If Puppet::Node::Environment has a validate_dirs instance method (i.e.
   # Puppet < 3.x), wrap the method to check if rspec-puppet is pretending to be
   # running under windows. The original method uses Puppet::Util.absolute_path?
